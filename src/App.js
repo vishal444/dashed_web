@@ -1,25 +1,49 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState, createContext } from 'react';
+import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
+import LoginRegistration from '../src/screens/LoginRegistration';
+import ProductsList from '../src/screens/ProductsList';
+import ProductDetail from '../src/screens/ProductDetail';
+import Navbar from '../src/screens/Navbar';
+import Cart from '../src/screens/Cart';
 
-function App() {
+export const AppContext = createContext();
+
+const AppWrapper = () => {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Router>
+      <App />
+    </Router>
   );
-}
+};
 
-export default App;
+const App = () => {
+  const location = useLocation();
+  const [userEmail, setUserEmail] = useState(null);
+  const [isSeller, setIsSeller] = useState(false);
+  const [photos, setPhotos] = useState([]);
+
+  return (
+    <AppContext.Provider
+      value={{
+        userEmail,
+        setUserEmail,
+        isSeller,
+        setIsSeller,
+        photos,
+        setPhotos,
+      }}
+    >
+      {location.pathname !== '/' && location.pathname !== '/login' && <Navbar />}
+      <Routes>
+        <Route path="/" element={<LoginRegistration />} />
+        <Route path="/login" element={<LoginRegistration />} />
+        <Route path="/productsList" element={<ProductsList />} />
+        <Route path="/productDetail" element={<ProductDetail />} />
+        <Route path="/cart" element={<Cart />} />
+        {/* <Route path="/landing" element={<Store />} /> */}
+      </Routes>
+    </AppContext.Provider>
+  );
+};
+
+export default AppWrapper;
