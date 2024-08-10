@@ -2,7 +2,7 @@ import React, { useContext, useState, useEffect } from 'react';
 // import { useNavigate } from 'react-router-dom';
 import { AppContext } from '../App';
 import '../App.css'; // Import the custom CSS file
-import Razorpay from 'razorpay';
+// import Razorpay from 'razorpay';
 
 const Cart = () => {
   const { userEmail } = useContext(AppContext);
@@ -105,9 +105,6 @@ const Cart = () => {
     }
   
     try {
-      // Calculate total amount
-      const totalAmount = cartItems.reduce((sum, item) => sum + (parseFloat(item.Price) * parseInt(item.Quantity)), 0);
-  
       // Create order
       const createOrderResponse = await fetch('http://127.0.0.1:3000/create-order', {
         method: 'POST',

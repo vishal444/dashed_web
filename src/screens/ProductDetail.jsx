@@ -9,10 +9,12 @@ const ProductDetail = () => {
   const { userEmail } = useContext(AppContext);
   const location = useLocation();
   const { product: initialProduct } = location.state;
-  const [product, setProduct] = useState(initialProduct);
+  const [product, setProduct] = useState();
   const [selectedQuantity, setSelectedQuantity] = useState(1);
   const [selectedOptions, setSelectedOptions] = useState({});
-
+  useEffect(() => {
+    setProduct(initialProduct);
+}, [initialProduct]);
   const handleQuantityDecrease = () => {
     if (selectedQuantity > 1) {
       setSelectedQuantity(selectedQuantity - 1);
@@ -52,7 +54,9 @@ const ProductDetail = () => {
       if (response.status === 200) {
         const data = await response.json();
         alert('Success: Product added to cart');
+        console.log(data);
       } else {
+        
         const errorData = await response.json();
         console.error('Error adding to cart:', errorData);
         alert('Error: An error occurred while adding the product to the cart');
