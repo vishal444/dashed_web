@@ -9,16 +9,16 @@ export default function LoginRegistration() {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
-  const [existingEmail, setExistingEmail] = useState(null);
+  // const [existingEmail, setExistingEmail] = useState(null);
   const navigate = useNavigate();
   const { setUserEmail } = useContext(AppContext);
 
   useEffect(() => {
     const startingUp = async () => {
       try {
-        const value = localStorage.getItem('may');
-        setExistingEmail(value);
-        console.log(existingEmail);
+        // const value = localStorage.getItem('may');
+        // setExistingEmail(value);
+        // console.log(existingEmail);
       } catch (error) {
         console.error(error);
       }
