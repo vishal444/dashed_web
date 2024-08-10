@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+// import { useNavigate } from 'react-router-dom';
 import { AppContext } from '../App';
 import '../App.css'; // Import the custom CSS file
 import Razorpay from 'razorpay';
@@ -10,7 +10,7 @@ const Cart = () => {
   const [addresses, setAddresses] = useState([]);
   const [selectedAddressId, setSelectedAddressId] = useState(null);
   const [cartEmpty, setCartEmpty] = useState(false);
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   useEffect(() => {
     const fetchCartItems = async () => {
@@ -103,65 +103,43 @@ const Cart = () => {
       console.error('No address selected');
       return;
     }
-
+  
     try {
-      const checkoutData = {
-        userEmail: userEmail,
-        addressId: selectedAddressId,
-      };
-      const response = await fetch('http://127.0.0.1:3000/checkout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(checkoutData),
-      });
-      if (response.status === 200) {
-        console.log('Checkout successful');
-        setCartEmpty(true);
-      } else {
-        console.error('Error during checkout:', response.status);
-      }
-    } catch (error) {
-      console.error('Error:', error);
-    }
-  };
-
-  const handlePayment = async () => {
-    if (!selectedAddressId) {
-      console.error('No address selected');
-      return;
-    }
-
-    try {
-      // Create the order on the server-side
-      const response = await fetch('/create-order', {
+      // Calculate total amount
+      const totalAmount = cartItems.reduce((sum, item) => sum + (parseFloat(item.Price) * parseInt(item.Quantity)), 0);
+  
+      // Create order
+      const createOrderResponse = await fetch('http://127.0.0.1:3000/create-order', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          amount: 982323, // Calculate the total amount to be paid
-          userEmail: userEmail,
+          userEmail,
           addressId: selectedAddressId,
+          cartItems: cartItems.map(item => ({
+            price: parseFloat(item.Price),
+            quantity: parseInt(item.Quantity),
+            productId: item.ProductID, // Assuming you have a ProductID field
+            name: item.Name, // Assuming you have a Name field
+            // Include any other necessary fields
+          })),
         }),
       });
-
-      if (response.status === 200) {
-        const order = await response.json();
-
-        // Initialize the Razorpay checkout
+  
+      if (createOrderResponse.ok) {
+        const order = await createOrderResponse.json();
+        
         const options = {
-          key: 'YOUR_KEY_ID', // Replace with your Razorpay key_id
-          amount: order.amount, // Amount in paise
+          key: 'rzp_test_mWvmhCC5tXBykh', // Replace with your actual Razorpay key
+          amount: order.amount, // This should now be correctly set by the server
           currency: 'INR',
-          name: 'Your Store',
-          description: 'Payment for your order',
-          order_id: order.id, // This is the order_id created on the server-side
-          handler: async (response) => {
+          name: 'Dashed',
+          description: 'Complete your payment',
+          order_id: order.razorpay_order_id,
+          handler: async function (response) {
             try {
-              // Verify the payment on the server-side
-              const verifyResponse = await fetch('/verify-payment', {
+              const verifyResponse = await fetch('http://127.0.0.1:3000/verify-payment', {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
@@ -170,41 +148,49 @@ const Cart = () => {
                   razorpay_payment_id: response.razorpay_payment_id,
                   razorpay_order_id: response.razorpay_order_id,
                   razorpay_signature: response.razorpay_signature,
+                  orderId: order.orderId
                 }),
               });
-
-              if (verifyResponse.status === 200) {
-                console.log('Payment successful');
+  
+              if (verifyResponse.ok) {
+                const verificationResult = await verifyResponse.json();
+                console.log('Payment successful:', verificationResult);
                 setCartEmpty(true);
-                navigate('/order-history');
+                // You might want to navigate to a success page or show a success message
+                // For example: navigate('/order-success');
               } else {
-                console.error('Error verifying payment:', verifyResponse.status);
+                console.error('Payment verification failed');
+                // Handle failed verification
+                // You might want to show an error message to the user
               }
             } catch (error) {
-              console.error('Error:', error);
+              console.error('Error during payment verification:', error);
+              // Handle error (show error message to user)
             }
           },
           prefill: {
-            name: 'John Doe',
+            name: 'Customer Name', // You might want to get this from your user data
             email: userEmail,
-            contact: '9999999999',
+            contact: 'Customer Phone' // You might want to get this from your user data
           },
           theme: {
-            color: '#F37254',
-          },
+            color: '#F37254'
+          }
         };
-
-        const rzp = new Razorpay(options);
-        rzp.open();
+  
+        const razorpay = new window.Razorpay(options);
+        razorpay.open();
       } else {
-        console.error('Error creating order:', response.status);
+        console.error('Failed to create order');
+        // Handle order creation failure
+        // You might want to show an error message to the user
       }
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error during checkout:', error);
+      // Handle error (show error message to user)
     }
   };
 
-  
 
   return (
     <div className="cart-container">
